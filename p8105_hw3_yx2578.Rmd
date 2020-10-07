@@ -88,7 +88,8 @@ instacart %>%
 
 ### Question 2
 
-* Load and tidy the data using the following code chunk:
+
+##### Load and tidy the data
 
 ```{r, message = FALSE, warning = FALSE}
 p2_df = 
@@ -103,23 +104,22 @@ p2_df =
    mutate(
     weekday = ifelse(day %in% c("Saturday", "Sunday"), FALSE, TRUE),
     min = as.numeric(min),
-    dow = recode_factor(day,
-                        "Sunday" = 0,
-                        "Monday" = 1, 
-                        "Tuesday" = 2, 
-                        "Wednesday" = 3,
-                        "Thursday" = 4, 
-                        "Friday" = 5, 
-                        "Saturday" = 6)
+    day = factor(day, 
+                 levels=c("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday")
+                 ) 
     )%>%
-  select(-day_id)%>%
-  order(c(week, dow))
+  arrange(day) %>%
+  select(-day_id)
 ```
 
-The resulting dataset contains `r ncol(p2_df)` variables, including week, day of the week, weekday (yes or no), minute of the day, activity. There are `r nrow(p2_df)` observations in total.
+* The resulting dataset contains `r ncol(p2_df)` columns and `r nrow(p2_df)` rows.
+* Variables are: week, day of the week, weekday (True or False), minute of the day and activity. 
 
 
-* Compute total activity over the day
+
+##### Total activity of each day
+
+Total activity of each day is computed using the following code chunk: 
 
 ```{r, message = FALSE, warning = FALSE}
 p2_df %>%
@@ -128,11 +128,12 @@ p2_df %>%
   knitr::kable(digits = 2)
 ```
 
-** It seems that this person tend to have a stable level of activity over the weekdays, with some extremely low or high levels on certain weekends.
-** It also seems like this person is more active during week 3.
+* It seems that this person tend to have a stable level of activity over the weekdays, with some extremely low or high levels on certain weekends.
+* It also seems like this person is more active during week 3.
 
 
-* Activity level plot
+
+##### Activity level plot by day
 
 ```{r, message = FALSE, warning = FALSE}
 p2_df %>%
@@ -140,36 +141,41 @@ p2_df %>%
   geom_line(aes(colour = day), alpha = 0.5)
 ```
 
-** It seems that this person is active during daytime and not active over the night.
-
+* It looks like this person is active during daytime and not active over the night.
+* There are several peaks of activity during weekdays in the mornings and evenings.
+* This person is more active during weekdays, in general.
 
 
 ### Question 3
 
-```{r}
-  data("ny_noaa")
-```
+The goal is to do some exploration of this dataset. To that end, write a short description of the dataset, noting the size and structure of the data, describing some key variables, and indicating the extent to which missing data is an issue. Then, do or answer the following (commenting on the results of each):
+
+* Do some data cleaning. Create separate variables for year, month, and day. Ensure observations for temperature, precipitation, and snowfall are given in reasonable units. For snowfall, what are the most commonly observed values? Why?
+* Make a two-panel plot showing the average max temperature in January and in July in each station across years. Is there any observable / interpretable structure? Any outliers?
+* Make a two-panel plot showing (i) tmax vs tmin for the full dataset (note that a scatterplot may not be the best option); and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year.
+
+##### Load and tidy the data
 
 ```{r}
-  ny_noaa %>% 
-  separate(date, c("month", "day", "year"), sep = "-") %>%
-  summarize(prcp)
-
-```
-
-* Make a plot showing the average max temperature in January and in July
-
-```{r}
-ny_noaa %>% 
+p3_df =
+  ny_noaa %>%
   separate(date, c("year", "month", "day"), sep = "-") %>%
   mutate(
     year = as.numeric(year),
     month = as.numeric(month),
     day = as.numeric(day),
-    tmin = as.numeric(tmin)*0.1,
-    tmax = as.numeric(tmax)*0.1) %>%
-  filter(month == 1 | month == 7) %>%
-  
+    prcp = as.numeric(prcp)*0.1,
+    tmax = as.numeric(tmax)*0.1,
+    tmin = as.numeric(tmin)*0.1)
+```
+
+* The tidied dataset contains `r ncol(p3_df)` columns and `r nrow(p3_df)` rows.
+* Variables are: weather station ID, year, month, day, precipitation (in mm), snowfall (in mm), snow depth (in mm), maximum temperature (in degree C), minimum temperature (in degree C). 
+
+
+* Make a plot showing the average max temperature in January and in July
+
+```{r}
 
 ```
 
