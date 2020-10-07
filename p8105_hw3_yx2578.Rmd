@@ -36,7 +36,7 @@ Observations are the level of items in orders by user. There are user / order va
 
 How many aisles, and which are most items from?
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 instacart %>% 
 	count(aisle) %>% 
 	arrange(desc(n))
@@ -45,7 +45,7 @@ instacart %>%
 
 Let's make a plot
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 instacart %>% 
 	count(aisle) %>% 
 	filter(n > 10000) %>% 
@@ -61,7 +61,7 @@ instacart %>%
 
 Let's make a table!!
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 instacart %>% 
 	filter(aisle %in% c("baking ingredients", "dog food care", "packaged vegetables fruits")) %>% 
 	group_by(aisle) %>% 
@@ -75,7 +75,7 @@ instacart %>%
 
 Apples vs ice cream..
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 instacart %>% 
 	filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>% 
 	group_by(product_name, order_dow) %>% 
@@ -88,22 +88,89 @@ instacart %>%
 
 ### Question 2
 
-```{r}
+* Load and tidy the data using the following code chunk:
+
+```{r, message = FALSE, warning = FALSE}
 p2_df = 
   read_csv("./data/accel_data.csv") %>%
   janitor::clean_names() %>%
+  pivot_longer(
+   activity_1:activity_1440,
+   names_prefix = "activity_",
+   names_to = "min",
+   values_to = "activity"
+   ) %>%
+   mutate(
+    weekday = ifelse(day %in% c("Saturday", "Sunday"), FALSE, TRUE),
+    min = as.numeric(min),
+    dow = recode_factor(day,
+                        "Sunday" = 0,
+                        "Monday" = 1, 
+                        "Tuesday" = 2, 
+                        "Wednesday" = 3,
+                        "Thursday" = 4, 
+                        "Friday" = 5, 
+                        "Saturday" = 6)
+    )%>%
+  select(-day_id)%>%
+  order(c(week, dow))
 ```
 
-* pivot
-* group by and summarize problem
-* 
+The resulting dataset contains `r ncol(p2_df)` variables, including week, day of the week, weekday (yes or no), minute of the day, activity. There are `r nrow(p2_df)` observations in total.
+
+
+* Compute total activity over the day
+
+```{r, message = FALSE, warning = FALSE}
+p2_df %>%
+  group_by(week, day) %>% 
+  summarize(total_activity = sum(activity))%>% 
+  knitr::kable(digits = 2)
+```
+
+** It seems that this person tend to have a stable level of activity over the weekdays, with some extremely low or high levels on certain weekends.
+** It also seems like this person is more active during week 3.
+
+
+* Activity level plot
+
+```{r, message = FALSE, warning = FALSE}
+p2_df %>%
+  ggplot(aes(x = min, y = activity)) + 
+  geom_line(aes(colour = day), alpha = 0.5)
+```
+
+** It seems that this person is active during daytime and not active over the night.
+
 
 
 ### Question 3
 
 ```{r}
-data("ny_noaa")
+  data("ny_noaa")
 ```
 
-* count
+```{r}
+  ny_noaa %>% 
+  separate(date, c("month", "day", "year"), sep = "-") %>%
+  summarize(prcp)
+
+```
+
+* Make a plot showing the average max temperature in January and in July
+
+```{r}
+ny_noaa %>% 
+  separate(date, c("year", "month", "day"), sep = "-") %>%
+  mutate(
+    year = as.numeric(year),
+    month = as.numeric(month),
+    day = as.numeric(day),
+    tmin = as.numeric(tmin)*0.1,
+    tmax = as.numeric(tmax)*0.1) %>%
+  filter(month == 1 | month == 7) %>%
+  
+
+```
+
 *
