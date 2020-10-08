@@ -77,7 +77,7 @@ instacart %>%
 ### Question 2
 
 
-##### Load and tidy the data
+#### Load and tidy the data
 
 ```{r, message = FALSE, warning = FALSE}
 p2_df = 
@@ -105,7 +105,7 @@ p2_df =
 
 
 
-##### Total activity of each day
+#### Total activity of each day
 
 Total activity of each day is computed using the following code chunk: 
 
@@ -113,7 +113,10 @@ Total activity of each day is computed using the following code chunk:
 p2_df %>%
   group_by(week, day) %>% 
   summarize(total_activity = sum(activity))%>% 
-  knitr::kable(digits = 2)
+  pivot_wider (
+    names_from = day,
+    values_from = total_activity
+  )
 ```
 
 * It seems that this person tend to have a stable level of activity over the weekdays, with some extremely low or high levels on certain weekends.
@@ -121,12 +124,13 @@ p2_df %>%
 
 
 
-##### Activity level plot by day
+#### Activity level plot by day
 
 ```{r, message = FALSE, warning = FALSE}
 p2_df %>%
   ggplot(aes(x = min, y = activity)) + 
-  geom_line(aes(colour = day), alpha = 0.5)
+  geom_line(aes(colour = day), alpha = 0.5)+
+  geom_smooth(aes(colour = day), alpha = 0.5)
 ```
 
 * It looks like this person is active during daytime and not active after midnight.
@@ -136,15 +140,10 @@ p2_df %>%
 
 ### Question 3
 
-The goal is to do some exploration of this dataset. To that end, write a short description of the dataset, noting the size and structure of the data, describing some key variables, and indicating the extent to which missing data is an issue. Then, do or answer the following (commenting on the results of each):
 
-* Do some data cleaning. Create separate variables for year, month, and day. Ensure observations for temperature, precipitation, and snowfall are given in reasonable units. For snowfall, what are the most commonly observed values? Why?
-* Make a two-panel plot showing the average max temperature in January and in July in each station across years. Is there any observable / interpretable structure? Any outliers?
-* Make a two-panel plot showing (i) tmax vs tmin for the full dataset (note that a scatterplot may not be the best option); and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year.
+#### Load and tidy the data
 
-##### Load and tidy the data
-
-```{r}
+```{r message = FALSE, warning = FALSE}
 p3_df =
   ny_noaa %>%
   separate(date, c("year", "month", "day"), sep = "-") %>%
@@ -159,16 +158,75 @@ p3_df =
 
 * The tidied dataset contains `r ncol(p3_df)` columns and `r nrow(p3_df)` rows.
 * Variables are: weather station ID, year, month, day, precipitation (in mm), snowfall (in mm), snow depth (in mm), maximum temperature (in degree C), minimum temperature (in degree C). 
-* There are `r p3_df %>% nrow(is.na(prcp))` rows.
+* There are a lot of missing values in this data set:
+  * The precipitation variable has `r sum(is.na(p3_df$prcp))` missing values
+  * The snowfall has `r sum(is.na(p3_df$snow))` missing values
+  * The snow depth variable has `r sum(is.na(p3_df$snwd))` missing values
+  * The minimum temperature has `r sum(is.na(p3_df$tmin))` missing values
+  * The maximum temperature has `r sum(is.na(p3_df$tmax))` missing values
 
-* Make a plot showing the average max temperature in January and in July
+#### Answer to the questions
+
+* For snowfall, most commonly observed values is 0, there are `r p3_df %>% filter(snow == 0) %>% nrow()` rows with a 0 snowfall record.
+
+* Plot showing the average max temperature in January and in July in each station across years:
+
+```{r, message = FALSE, warning = FALSE}
+p3_df %>%
+  filter(month == 1 | month == 7) %>%
+  group_by(id, year, month) %>%
+  mutate(
+    avg_tmax = mean(tmax, na.rm = TRUE),
+    month = month.name[month]) %>%
+  ggplot(aes(x = year, y = avg_tmax, color = month)) + 
+  geom_point(size = 0.1)+
+  geom_smooth(alpha = 0.5, se = FALSE)+
+  facet_grid(~month)+
+  theme(legend.position="none")+
+  scale_color_manual(values=c("blue", "orange"))
+```
 
 ```{r}
 p3_df %>%
   filter(month == 1 | month == 7) %>%
-  ggplot(aes(x = year, y = tmax)) + 
-  geom_point(aes(colour = factor(month)), size = 0.25)+
-  facet_grid(~month)
+  group_by(id, year, month) %>%
+  mutate(
+    avg_tmax = mean(tmax, na.rm = TRUE),
+    month = month.name[month]) %>%
+  ggplot(aes(x = year, y = avg_tmax, color = month)) + 
+  geom_path()+
+  facet_grid(~month)+
+  theme(legend.position="none")+
+  scale_color_manual(values=c("blue", "orange"))
 ```
 
-*
+
+
+Observable and interpretable structure: It is warmer in July overall. The average maximum temperature among different stations has a smaller fluctuation range among July over the years, as compared to January. It seems that there is not apparent global warming trend from this plot. There seem to be extremely cold winters around 1993~1994 and around 2002-2004.
+
+* Make a two-panel plot
+
+```{r, message = FALSE, warning = FALSE}
+library("patchwork")
+
+p3_3_a <- 
+  p3_df %>% 
+  drop_na(tmin) %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_hex()
+
+p3_3_b <- 
+p3_df %>% 
+  filter(snow < 100 & snow > 0) %>%
+  mutate(year = factor(year)) %>%
+  ggplot(aes(x = year, y = snow)) + 
+  geom_violin(aes(fill = year), alpha = 0.3, draw_quantiles = c(0.25, 0.5, 0.75))+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position="none")
+
+p3_3_a/p3_3_b
+```
+
+
+
+
