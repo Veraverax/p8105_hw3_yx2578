@@ -9,22 +9,10 @@ This is my solution to HW3.
 ```{r, message = FALSE, warning = FALSE}
 library(tidyverse)
 library(p8105.datasets)
-knitr::opts_chunk$set(
-	fig.width = 6, 
-  fig.asp = .6,
-  out.width = "90%"
-)
-theme_set(theme_minimal() + theme(legend.position = "bottom"))
-options(
-  ggplot2.continuous.colour = "viridis",
-  ggplot2.continuous.fill = "viridis"
-)
-scale_colour_discrete = scale_colour_viridis_d
-scale_fill_discrete = scale_fill_viridis_d
 ```
 
 
-### Problem 1
+### Problem 1 demonstrated by Jeff in class
 
 ```{r}
 data("instacart")
@@ -141,7 +129,7 @@ p2_df %>%
   geom_line(aes(colour = day), alpha = 0.5)
 ```
 
-* It looks like this person is active during daytime and not active over the night.
+* It looks like this person is active during daytime and not active after midnight.
 * There are several peaks of activity during weekdays in the mornings and evenings.
 * This person is more active during weekdays, in general.
 
@@ -171,12 +159,16 @@ p3_df =
 
 * The tidied dataset contains `r ncol(p3_df)` columns and `r nrow(p3_df)` rows.
 * Variables are: weather station ID, year, month, day, precipitation (in mm), snowfall (in mm), snow depth (in mm), maximum temperature (in degree C), minimum temperature (in degree C). 
-
+* There are `r p3_df %>% nrow(is.na(prcp))` rows.
 
 * Make a plot showing the average max temperature in January and in July
 
 ```{r}
-
+p3_df %>%
+  filter(month == 1 | month == 7) %>%
+  ggplot(aes(x = year, y = tmax)) + 
+  geom_point(aes(colour = factor(month)), size = 0.25)+
+  facet_grid(~month)
 ```
 
 *
