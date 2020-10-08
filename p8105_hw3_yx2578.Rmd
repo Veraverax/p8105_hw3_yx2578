@@ -112,15 +112,16 @@ Total activity of each day is computed using the following code chunk:
 ```{r, message = FALSE, warning = FALSE}
 p2_df %>%
   group_by(week, day) %>% 
-  summarize(total_activity = sum(activity))%>% 
+  summarize(total_activity = sum(activity))%>%
+  mutate(total_activity = round(total_activity, 0))%>%
   pivot_wider (
     names_from = day,
     values_from = total_activity
   )
 ```
 
-* It seems that this person tend to have a stable level of activity over the weekdays, with some extremely low or high levels on certain weekends.
-* It also seems like this person is more active during week 3.
+* It seems that this person tend to have a stable level of activity over the weekdays, with extremely low activity levels on the Saturday of week 4 and 5.
+* It also seems like this person is more active on week 2 Friday, Week 3 Monday and Week 5 Thursday and Friday.
 
 
 
@@ -186,32 +187,18 @@ p3_df %>%
   scale_color_manual(values=c("blue", "orange"))
 ```
 
-```{r}
-p3_df %>%
-  filter(month == 1 | month == 7) %>%
-  group_by(id, year, month) %>%
-  mutate(
-    avg_tmax = mean(tmax, na.rm = TRUE),
-    month = month.name[month]) %>%
-  ggplot(aes(x = year, y = avg_tmax, color = month)) + 
-  geom_path()+
-  facet_grid(~month)+
-  theme(legend.position="none")+
-  scale_color_manual(values=c("blue", "orange"))
-```
-
-
-
 Observable and interpretable structure: It is warmer in July overall. The average maximum temperature among different stations has a smaller fluctuation range among July over the years, as compared to January. It seems that there is not apparent global warming trend from this plot. There seem to be extremely cold winters around 1993~1994 and around 2002-2004.
 
-* Make a two-panel plot
+
+* Make a two-panel plot that consist of
+  * maximum temperature vs minimum temperature for the full dataset
+  * distribution of snowfall values (between 0 and 100) over the years
 
 ```{r, message = FALSE, warning = FALSE}
 library("patchwork")
 
 p3_3_a <- 
   p3_df %>% 
-  drop_na(tmin) %>% 
   ggplot(aes(x = tmin, y = tmax)) + 
   geom_hex()
 
